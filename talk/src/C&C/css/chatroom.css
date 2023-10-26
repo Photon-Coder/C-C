@@ -11,6 +11,10 @@
     flex-direction: column;
 }
 
+.chatlist-me, .chatlist-you{
+    list-style: none;
+}
+
 .chats .chat-date-time-me,
 .chats .chat-date-time-you{
     font-size: medium;
@@ -34,7 +38,9 @@
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    float: right;
+    padding: 0rem;
+    justify-content: flex-end;
+    padding-right: 0.7rem;
 }
 
 .chatlist-you {
@@ -42,6 +48,7 @@
     align-items: center;
     margin-bottom: 10px;
     float: left;
+    padding: 0rem;
 }
 
 .chats-content {

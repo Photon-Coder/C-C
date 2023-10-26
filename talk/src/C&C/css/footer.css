@@ -27,8 +27,11 @@
 }
 
 .nav-list {
+    width: 100%;
     display: flex;
     justify-content: space-between;
+    text-align: center;
+    align-items: center;
     list-style: none;
 }
 
@@ -50,7 +53,7 @@
     animation: notificationAnimation 2s ease-in-out infinite;
 }
 
-.badge {
+.nav .badge {
     background-color: tomato;
     width: 30px;
     height: 30px;
@@ -75,6 +78,10 @@
 }
 
 .tab-bar__btn {
+    margin-left: 3.5rem;
+    margin-right: 3.5rem;
+    text-align: center;
+    align-items: center;
     transform: translateY(50px);
     opacity: 0;
     animation: appearBtnAnimation 0.3s ease-in-out forwards;

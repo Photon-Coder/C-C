@@ -119,44 +119,16 @@ const People = () => {
                 <main className="people">
                     <a href="##">
                         <div className="me">
-                            <img src={Logo} alt="my img" className="M-img" />
+                            <Image src={user && user.photoURL}
+                                className="M-img"
+                                roundedCircle />
                             <div className="me-column">
-                                <h4 className="me-name">김광연</h4>
-                                <span className="me-textline">
-                                    <div className="textline_for">CapStone set</div>
-                                </span>
-                            </div>
-                            <div className="user-component">
-                                <div style={{ display: 'flex', marginBottom: '1rem' }}>
-                                    <Image src={user && user.photoURL}
-                                        style={{ width: '30p', height: '30px', marginTop: '3px' }}
-                                        roundedCircle />
-
-                                    <Dropdown>
-                                        <Dropdown.Toggle
-                                            style={{ background: 'transparent', boder: '0px' }}
-                                            id="dropdown-basic">
-                                            {user && user.displayName}
-                                        </Dropdown.Toggle>
-
-                                        <Dropdown.Menu>
-                                            <Dropdown.Item onClick={handleOpenImageRef}>
-                                                프로필 사진 변경
-                                            </Dropdown.Item>
-                                            <Dropdown.Item onClick={handleLogout}>
-                                                로그아웃
-                                            </Dropdown.Item>
-                                        </Dropdown.Menu>
-                                    </Dropdown>
+                                <div id="my-data">
+                                    {user && user.displayName}
                                 </div>
-
-                                <input
-                                    onChange={handleUploadImage}
-                                    accept="image/jpeg, image/png"
-                                    style={{ display: 'none' }}
-                                    ref={inputOpenImageRef}
-                                    type="file"
-                                />
+                                <div className="textline_for">
+                                    Capstone
+                                </div>
                             </div>
                         </div>
                     </a>
@@ -210,7 +182,7 @@ const People = () => {
                     </ul>
                 </nav>
                 <div id="splash-screen">
-                    <img src="./img/C&Clogo.png" alt="C&C 로고" />
+                    <img src={Logo} alt="C&C 로고" />
                 </div>
                 <div id="no-mobile">
                     <span>화면이 너무 큽니다.</span>

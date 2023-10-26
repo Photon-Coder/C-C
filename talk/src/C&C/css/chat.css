@@ -70,7 +70,7 @@ img{
     font-size: medium;
 }
 
-.badge {
+.chat .badge {
     background-color: tomato;
     width: 30px;
     height: 30px;
@@ -83,20 +83,23 @@ img{
 }
 
 .chat-plus{
+    display: flex;
     background-color: #27374D;
     border-radius: 50%;
-    position: relative;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: fixed;
     color: #fff;
     width: 75px;
     height: 75px;
-    position: fixed;
-    margin-top: 50%;
+    bottom: 14%;
+    margin-top: 45%;
     margin-left: 80%;
 }
 
-.chat-plus i{
-    align-items: center;
-    text-align: center;
-    margin-top: 30%;
-    margin-left: 30%;
+.plus-btn{
+    position: absolute;
+    cursor: pointer;
+    font-size: 2rem;
 }

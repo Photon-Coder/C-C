@@ -1,14 +1,153 @@
-import React from 'react';
-
+import React, { useState, useEffect } from 'react';
+import { ref, getDatabase, onChildAdded, push, update, onValue, child } from "firebase/database";
+import { connect } from 'react-redux';
+import { setCurrentChatRoom, setPrivateChatRoom } from './js/action/chatRoom_action';
+import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import Badge from 'react-bootstrap/Badge';
+import { FaRegSmileWink, FaPlus } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
-import './style.css';
+const ChatPlus = (props) => {
+    const [show, setShow] = useState(false);
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
+    const chatRoomsRef = ref(getDatabase(), "chatRooms");
+    const messagesRef = ref(getDatabase(), "messages");
+    const [chatRooms, setChatRooms] = useState([]);
+    const [firstLoad, setFirstLoad] = useState(true);
+    const [activeChatRoomId, setActiveChatRoomId] = useState("");
+    const [notifications, setNotifications] = useState([]);
 
-const Chatplus = () => {
+    const setFirstChatRoom = () => {
+        const firstChatRoom = chatRooms[0];
+        if (firstLoad && chatRooms.length > 0) {
+            props.dispatch(setCurrentChatRoom(firstChatRoom));
+            setActiveChatRoomId(firstChatRoom.id);
+        }
+        setFirstLoad(false);
+    };
+
+    const addChatRoomsListeners = () => {
+        let chatRoomsArray = [];
+
+        onChildAdded(chatRoomsRef, (DataSnapshot) => {
+            chatRoomsArray.push(DataSnapshot.val());
+            setChatRooms(chatRoomsArray);
+            addNotificationListener(DataSnapshot.key);
+        });
+    };
+
+    const addNotificationListener = (chatRoomId) => {
+        onValue(child(messagesRef, chatRoomId), (DataSnapshot) => {
+            if (props.chatRoom) {
+                handleNotification(chatRoomId, props.chatRoom.id, notifications, DataSnapshot);
+            }
+        });
+    };
+
+    const handleNotification = (chatRoomId, currentChatRoomId, notifications, DataSnapshot) => {
+        let lastTotal = 0;
+
+        let index = notifications.findIndex((notification) => notification.id === chatRoomId);
+
+        if (index === -1) {
+            notifications.push({
+                id: chatRoomId,
+                total: DataSnapshot.size,
+                lastKnownTotal: DataSnapshot.size,
+                count: 0,
+            });
+        } else {
+            if (chatRoomId !== currentChatRoomId) {
+                lastTotal = notifications[index].lastKnownTotal;
+                if (DataSnapshot.size - lastTotal > 0) {
+                    notifications[index].count = DataSnapshot.size - lastTotal;
+                }
+            }
+            notifications[index].total = DataSnapshot.size;
+        }
+        setNotifications(notifications);
+    };
+
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (isFormValid(name, description)) {
+            addChatRoom();
+        }
+    };
+
+    const addChatRoom = async () => {
+        const key = push(chatRoomsRef).key;
+        const newChatRoom = {
+            id: key,
+            name: name,
+            description: description,
+            createdBy: {
+                name: props.user.displayName,
+                image: props.user.photoURL,
+            },
+        };
+
+        try {
+            await update(child(chatRoomsRef, key), newChatRoom);
+            setName("");
+            setDescription("");
+            setShow(false);
+        } catch (error) {
+            alert(error);
+        }
+    };
+
+    const isFormValid = (name, description) => name && description;
+
+    const changeChatRoom = (room) => {
+        props.dispatch(setCurrentChatRoom(room));
+        props.dispatch(setPrivateChatRoom(false));
+        setActiveChatRoomId(room.id);
+    };
+
+    const getNotificationCount = (room) => {
+        let count = 0;
+        notifications.forEach((notification) => {
+            if (notification.id === room.id) {
+                count = notification.count;
+            }
+        });
+        if (count > 0) return count;
+    };
+
+    const renderChatRooms = (chatRooms) =>
+        chatRooms.length > 0 &&
+        chatRooms.map((room) => (
+            <li
+                key={room.id}
+                style={{
+                    backgroundColor:
+                    room.id === activeChatRoomId && "#ffffff45",
+                }}
+                onClick={() => changeChatRoom(room)}
+            >
+                # {room.name}
+                <Badge style={{ float: "right", marginTop: "4px" }} variant="danger">
+                    {getNotificationCount(room)}
+                </Badge>
+            </li>
+        )
+    );
+
+    useEffect(() => {
+        setFirstChatRoom();
+        addChatRoomsListeners();
+    }, []);
+
     return (
         <React.Fragment>
             <div className="C-body">
-                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
                 <header className="header">
                     <span className="wrapper">
                         <Link to="/Chat" className="back-link">
@@ -30,12 +169,65 @@ const Chatplus = () => {
                     </div>
                 </header>
                 <main className="new-chat">
-                    
+                    <div>
+                        <div
+                            style={{
+                                position: "relative",
+                                width: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                            }}
+                        >
+                            <FaRegSmileWink style={{ marginRight: 3 }} />
+                            CHAT ROOMS {" "} ({chatRooms.length})
+                            <FaPlus
+                            onClick={handleShow}
+                            style={{
+                                position: "absolute",
+                                right: 0,
+                                cursor: "pointer",
+                            }}
+                            />
+                        </div>
+                        <ul style={{ listStyleType: "none", padding: 0 }}>
+                            {renderChatRooms(chatRooms)}
+                        </ul>
+                        <Modal show={show} onHide={handleClose}>
+                            <Modal.Body>
+                                <Form onSubmit={handleSubmit}>
+                                    <Form.Group controlId="formBasicEmail">
+                                        <Form.Label>방 이름</Form.Label>
+                                        <Form.Control
+                                            onChange={(e) => setName(e.target.value)}
+                                            type="text"
+                                            placeholder="Enter a chat room name"
+                                        />
+                                    </Form.Group>
+                                    <Form.Group controlId="formBasicPassword">
+                                        <Form.Label>방 설명</Form.Label>
+                                        <Form.Control
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            type="text"
+                                            placeholder="Enter a chat room description"
+                                        />
+                                    </Form.Group>
+                                </Form>
+                            </Modal.Body>
+                            <Modal.Footer>
+                                <Button variant="secondary" onClick={handleClose}>
+                                    Close
+                                </Button>
+                                <Button variant="primary" onClick={handleSubmit}>
+                                    Create
+                                </Button>
+                            </Modal.Footer>
+                        </Modal>
+                    </div>
                 </main>
                 <nav className="nav">
                     <ul className="nav-list">
                         <li className="tab-bar__btn">
-                            <Link to="/People" className="nav-tab">
+                            <Link to="/" className="nav-tab">
                                 <i className="fas fa-user fa-2x"></i>
                             </Link>
                         </li>
@@ -60,4 +252,11 @@ const Chatplus = () => {
     );
 };
 
-export default Chatplus;
+const mapStateToProps = (state) => {
+    return {
+        user: state.user.currentUser,
+        chatRoom: state.chatRoom.currentChatRoom,
+    };
+}
+
+export default connect(mapStateToProps)(ChatPlus);
