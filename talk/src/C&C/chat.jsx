@@ -21,7 +21,6 @@ const Chat = (props) => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [chatRoomsRef] = useState(ref(getDatabase(), "chatRooms"));
-    const [messagesRef] = useState(ref(getDatabase(), "messages"));
     const [chatRooms, setChatRooms] = useState([]);
     const [firstLoad, setFirstLoad] = useState(true);
     const [activeChatRoomId, setActiveChatRoomId] = useState("");
@@ -87,16 +86,7 @@ const Chat = (props) => {
         setNotifications(notifications);
     };
     
-    const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
-    
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const { name, description } = this;
-        if (isFormValid(name, description)) {
-            addChatRoom();
-        }
-    };
     
     const addChatRoom = async () => {
         const key = push(chatRoomsRef).key;
@@ -140,9 +130,9 @@ const Chat = (props) => {
         if (count > 0) return count;
     };
     
-    const renderChatRooms = (chatRooms) =>
-        chatRooms.length > 0 &&
-        chatRooms.map((room) => (
+    const renderChatRooms = (Chatroom) =>
+        Chatroom.length > 0 &&
+        Chatroom.map((room) => (
             <li
                 key={room.id}
                 style={{

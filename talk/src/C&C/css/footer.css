@@ -18,12 +18,20 @@
     border-top: 1px solid rgba(121, 121, 121, 0.3);
 }
 
-.upload{
+.CR-nav .sendbtn {
+    display: inline;
+    width: 20%;
+    float: left
+}
+.CR-nav .uploadbtn {
     width: 10%;
+    float: left
 }
 
-.send{
-    width: 30%;
+.CR-nav .formchat {
+    display: inline;
+    width: 60%;
+    float: left;
 }
 
 .nav-list {

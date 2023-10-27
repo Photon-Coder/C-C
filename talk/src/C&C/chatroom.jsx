@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import moment from 'moment';
 import { Link } from 'react-router-dom';
 import Form from 'react-bootstrap/Form';
 import ProgressBar from 'react-bootstrap/ProgressBar';
@@ -13,7 +14,19 @@ import { getStorage, ref as strRef, uploadBytesResumable, getDownloadURL } from 
 import './style.css';
 import Logo from './img/C&Clogo.png';
 
-const Chatroom = () => {
+const Chatroom = ({message}) => {
+
+    const timeFromNow = timestamp => moment(timestamp).fromNow();
+
+    const isImage = message => {
+        return message.hasOwnProperty("image") && !message.hasOwnProperty("content");
+    }
+
+    const isMessageMine = (message, user) => {
+        if (user) {
+            return message.user.id === user.uid;
+        }
+    }
 
     const chatRoom = useSelector(state => state.chatRoom.currentChatRoom)
     const user = useSelector(state => state.user.currentUser)
@@ -174,7 +187,7 @@ const Chatroom = () => {
                             <i className="fa fa-chevron-left fa-2x"></i>
                         </Link>
                     </span>
-                    <h1 className="header-title">채팅</h1>
+                    <h1 className="header-title"></h1>
                     <div className="header-icons">
                         <span>
                             <i className="fas fa-search fa-lg"></i>
@@ -185,6 +198,34 @@ const Chatroom = () => {
                     </div>
                 </header>
                 <main className="chats">
+
+                    <div style={{ marginBottom: '3px', display:'flex' }}>
+                        <img
+                            style={{ borderRadius: '10px' }}
+                            width={48}
+                            height={48}
+                            className="mr-3"
+                            src={message.user.image}
+                            alt={message.user.name}
+                        />
+                        <div style={{
+                            backgroundColor: isMessageMine(message, user) && "#ECECEC"
+                        }}>
+                            <h6>{message.user.name}{" "}
+                                <span style={{ fontSize: '10px', color: 'gray' }}>
+                                    {timeFromNow(message.timestamp)}
+                                </span>
+                            </h6>
+                            {isImage(message) ?
+                                <img style={{ maxWidth: '300px' }} alt="이미지" src={message.image} />
+                                :
+                                <p>
+                                    {message.content}
+                                </p>
+                            }
+                        </div>
+                    </div>
+
                     <ul className="chatlist-me">
                         <li className="chats_chat">
                             <div className="chats-content">
@@ -223,30 +264,33 @@ const Chatroom = () => {
                     </ul>
                 </main>
                 <nav className="CR-nav">
-                    <Row>
-                        <Col>
-                            <button
-                                onClick={handleOpenImageRef}
-                                className="upload"
-                                style={{ width: '100%' }}
-                                disabled={loading ? true : false}
-                            >
-                                사진
-                            </button>
-                        </Col>
-                    </Row>
-
-                    <Form onSubmit={handleSubmit}>
-                        <Form.Group controlId="exampleForm.ControlTextarea1">
-                            <Form.Control
-                                onKeyDown={handleKeyDown}
-                                value={content}
-                                onChange={handleChange}
-                                as="textarea"
-                                rows={3} />
-                        </Form.Group>
-                    </Form>
-
+                    <div className='uploadbtn'>
+                        <Row>
+                            <Col>
+                                <button
+                                    onClick={handleOpenImageRef}
+                                    className="upload"
+                                    disabled={loading ? true : false}
+                                >
+                                    사진
+                                </button>
+                            </Col>
+                        </Row>
+                    </div>
+                    
+                    <div className='formchat'>
+                        <Form onSubmit={handleSubmit}>
+                            <Form.Group controlId="exampleForm.ControlTextarea1">
+                                <Form.Control
+                                    onKeyDown={handleKeyDown}
+                                    value={content}
+                                    className="form"
+                                    onChange={handleChange}
+                                    as="textarea"
+                                    rows={3} />
+                            </Form.Group>
+                        </Form>
+                    </div>
                     {
                         !(percentage === 0 || percentage === 100) &&
                         <ProgressBar variant="warning" label={`${percentage}%`} now={percentage} />
@@ -257,19 +301,20 @@ const Chatroom = () => {
                             {errorMsg}
                         </p>)}
                     </div>
-
-                    <Row>
-                        <Col>
-                            <button
-                                onClick={handleSubmit}
-                                className="send"
-                                style={{ width: '100%' }}
-                                disabled={loading ? true : false}
-                            >
-                                보내기
-                            </button>
-                        </Col>
-                    </Row>
+                    
+                    <div className='sendbtn'>
+                        <Row>
+                            <Col>
+                                <button
+                                    onClick={handleSubmit}
+                                    className="send"
+                                    disabled={loading ? true : false}
+                                >
+                                    보내기
+                                </button>
+                            </Col>
+                        </Row>
+                    </div>
 
                     <input
                         accept="image/jpeg, image/png"
@@ -280,6 +325,7 @@ const Chatroom = () => {
                     />
 
                 </nav>
+
                 <div id="no-mobile">
                     <span>화면이 너무 큽니다.</span>
                 </div>
