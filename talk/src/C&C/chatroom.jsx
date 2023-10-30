@@ -14,8 +14,7 @@ import { getStorage, ref as strRef, uploadBytesResumable, getDownloadURL } from 
 import './style.css';
 import Logo from './img/C&Clogo.png';
 
-const Chatroom = ({message}) => {
-
+const Chatroom = ({ message }) => {
     const timeFromNow = timestamp => moment(timestamp).fromNow();
 
     const isImage = message => {
@@ -28,20 +27,19 @@ const Chatroom = ({message}) => {
         }
     }
 
-    const chatRoom = useSelector(state => state.chatRoom.currentChatRoom)
-    const user = useSelector(state => state.user.currentUser)
-    const [content, setContent] = useState("")
-    const [errors, setErrors] = useState([])
-    const [loading, setLoading] = useState(false)
-    const [percentage, setPercentage] = useState(0)
-    const messagesRef = ref(getDatabase(), "messages")
+    const chatRoom = useSelector(state => state.chatRoom.currentChatRoom);
+    const user = useSelector(state => state.user.currentUser);
+    const [content, setContent] = useState("");
+    const [errors, setErrors] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [percentage, setPercentage] = useState(0);
+    const messagesRef = ref(getDatabase(), "messages");
     const inputOpenImageRef = useRef();
-    // const storageRef = ref(getStorage());
-    const typingRef = ref(getDatabase(), "typing")
-    const isPrivateChatRoom = useSelector(state => state.chatRoom.isPrivateChatRoom)
-    
+    const typingRef = ref(getDatabase(), "typing");
+    const isPrivateChatRoom = useSelector(state => state.chatRoom.isPrivateChatRoom);
+
     const handleChange = (event) => {
-        setContent(event.target.value)
+        setContent(event.target.value);
     }
 
     const createMessage = (fileUrl = null) => {
@@ -65,38 +63,36 @@ const Chatroom = ({message}) => {
 
     const handleSubmit = async () => {
         if (!content) {
-            setErrors(prev => prev.concat("Type contents first"))
+            setErrors(prev => prev.concat("Type contents first"));
             return;
         }
         setLoading(true);
-        //firebase에 메시지를 저장하는 부분 
-        try {
-            // await messagesRef.child(chatRoom.id).push().set(createMessage())
-            await set(push(child(messagesRef, chatRoom.id)), createMessage())
 
-            // typingRef.child(chatRoom.id).child(user.uid).remove();
+        try {
+            await set(push(child(messagesRef, chatRoom.id), createMessage()));
+
             await remove(child(typingRef, `${chatRoom.id}/${user.uid}`));
-            setLoading(false)
-            setContent("")
-            setErrors([])
+            setLoading(false);
+            setContent("");
+            setErrors([]);
         } catch (error) {
-            setErrors(pre => pre.concat(error.message))
-            setLoading(false)
+            setErrors(pre => pre.concat(error.message));
+            setLoading(false);
             setTimeout(() => {
-                setErrors([])
+                setErrors([]);
             }, 5000);
         }
     }
 
     const handleOpenImageRef = () => {
-        inputOpenImageRef.current.click()
+        inputOpenImageRef.current.click();
     }
 
     const getPath = () => {
         if (isPrivateChatRoom) {
-            return `/message/private/${chatRoom.id}`
+            return `/message/private/${chatRoom.id}`;
         } else {
-            return `/message/public`
+            return `/message/public`;
         }
     }
 

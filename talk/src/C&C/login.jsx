@@ -60,7 +60,7 @@ function Login() {
                             <a href="#">아이디/비밀번호 찾기</a>
                             <Link to="/Registration">회원가입</Link>
                         </div>
-                        <input type="submit" disabled={loading} />
+                        <input type="submit" value="로그인" disabled={loading} />
                     </form>
                 </div>
                 <div id="no-mobile">

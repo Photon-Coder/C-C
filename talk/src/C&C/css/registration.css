@@ -66,7 +66,7 @@ img{
 .R-box{
     position: relative;
     width: 380px;
-    height: 770px;
+    height: 620px;
     background: #1c1c1c;
     border-radius: 8px;
     overflow: hidden;
@@ -78,7 +78,7 @@ img{
     top: -50%;
     left: -50%;
     width: 380px;
-    height: 760px;
+    height: 620px;
     background: linear-gradient(0deg,transparent,transparent,
     #526D82,#526D82,#526D82,#526D82,#526D82);
     z-index: 1;
@@ -92,7 +92,7 @@ img{
     top: -50%;
     left: -50%;
     width: 380px;
-    height: 760px;
+    height: 620px;
     background: linear-gradient(0deg,transparent,transparent,
     #526D82,#526D82,#526D82,#526D82,#526D82);
     z-index: 1;
@@ -113,7 +113,7 @@ img{
     top: -50%;
     left: -50%;
     width: 380px;
-    height: 760px;
+    height: 620px;
     background: linear-gradient(0deg,transparent,transparent,
     #DDE6ED,#DDE6ED,#DDE6ED,#DDE6ED,#DDE6ED);
     z-index: 1;
@@ -128,7 +128,7 @@ img{
     top: -50%;
     left: -50%;
     width: 380px;
-    height: 760px;
+    height: 620px;
     background: linear-gradient(0deg,transparent,transparent,
     #DDE6ED,#DDE6ED,#DDE6ED,#DDE6ED,#DDE6ED);
     z-index: 1;
@@ -247,7 +247,6 @@ img{
     height: 50px;
     font-size: 18px;
     color: #000;
-    margin-bottom: 20px;
     background-color: #fff;
     width: 100%;
     padding: 0 20px;
@@ -262,7 +261,6 @@ img{
     height: 50px;
     font-size: 18px;
     color: #000;
-    margin-bottom: 20px;
     width: 100%;
     padding: 0 20px;
     box-sizing: border-box;
@@ -270,7 +268,7 @@ img{
     background-color: #fff;
 }
 
-.R-box form button[type="button"]{
+.R-box form button[type="next"]{
     border: none;
     outline: none;
     padding: 9px 25px;
@@ -283,6 +281,49 @@ img{
     cursor: pointer;
 }
 
-.R-box form button[type="button"]:active{
+.R-box form button[type="next"]:active{
     opacity: 0.8;
+}
+
+.R-box form input[type="submit"]{
+    border: none;
+    outline: none;
+    padding: 9px 25px;
+    background: #fff;
+    font-size: 0.9em;
+    border-radius: 4px;
+    font-weight: 600;
+    width: 150px;
+    margin-top: 1%;
+    cursor: pointer;
+}
+
+.R-box form input[type="submit"]:active{
+    opacity: 0.8;
+}
+
+.buttons-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 3%;
+}
+
+.buttons-container button {
+    margin-right: 36%; /* 버튼 사이 간격 조절 */
+}
+
+.buttons-container input {
+    margin-right: 36%; /* 버튼 사이 간격 조절 */
+}
+
+.buttons-container a:nth-child(2){
+    margin: 10px 0;
+    font-size: 0.75em;
+    color: #8f8f8f;
+    text-decoration: none;
+}
+
+.buttons-container a:hover:nth-child(2){
+    color: #fff;
 }

@@ -238,12 +238,19 @@ img{
     text-decoration: none;
 }
 
-.L-box form .L-links a:hover,
 .L-box form .L-links a:nth-child(2){
+    margin: 10px 0;
+    font-size: 0.75em;
+    color: #8f8f8f;
+    text-decoration: none;
+}
+
+.L-box form .L-links a:hover,
+.L-box form .L-links a:hover:nth-child(2){
     color: #fff;
 }
 
-.L-box form button[type="button"]{
+.L-box form input[type="submit"]{
     border: none;
     outline: none;
     padding: 9px 25px;
@@ -256,6 +263,6 @@ img{
     cursor: pointer;
 }
 
-.L-box form button[type="button"]:active{
+.L-box form input[type="submit"]:active{
     opacity: 0.8;
 }
