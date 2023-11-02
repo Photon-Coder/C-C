@@ -15,12 +15,12 @@ import Logo from './img/C&Clogo.png';
 
 const Chat = (props) => {
 
-    const currentChatRoom = useSelector(state => state.chatRoom.currentChatRoom)
+    const currentChatRoom = useSelector(state => state.chatRoom.currentChatRoom);
 
     const [show, setShow] = useState(false);
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [chatRoomsRef] = useState(ref(getDatabase(), "chatRooms"));
+    const [chatRoomsRef] = useState(ref(getDatabase(), "chatRooms")); // 수정된 부분
     const [chatRooms, setChatRooms] = useState([]);
     const [firstLoad, setFirstLoad] = useState(true);
     const [activeChatRoomId, setActiveChatRoomId] = useState("");
@@ -46,8 +46,7 @@ const Chat = (props) => {
     };
     
     const addNotificationListener = (chatRoomId) => {
-        let { messagesRef } = this;
-        onValue(child(messagesRef, chatRoomId), (DataSnapshot) => {
+        onValue(child(chatRoomsRef, chatRoomId), (DataSnapshot) => { // 수정된 부분
             if (props.chatRoom) {
                 handleNotification(
                     chatRoomId,
@@ -146,7 +145,8 @@ const Chat = (props) => {
                     {getNotificationCount(room)}
                 </Badge>
             </li>
-        ));
+        )
+    )
     
     useEffect(() => {
         setFirstChatRoom();
@@ -174,15 +174,14 @@ const Chat = (props) => {
                 </header>
                 <main className="chat">
                     <ul style={{ listStyleType: "none", padding: 0 }}>
-                        {/* 채팅 방 목록 */}
                         {chatRooms.map((room) => (
                             // 각 채팅 방 항목
-                            <li
-                                key={room.id}
-                                style={{
-                                    backgroundColor: room.id === activeChatRoomId && "#ffffff45",
-                                }}
-                            >
+                                <li
+                                    key={room.id}
+                                    style={{
+                                        backgroundColor: room.id === activeChatRoomId && "#ffffff45",
+                                    }}
+                                >
                                 <Link to="/Chatroom">
                                     # {room.name}
                                     <Badge style={{ float: "right", marginTop: "4px" }} variant="danger">

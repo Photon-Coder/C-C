@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import moment from 'moment';
 import { Link } from 'react-router-dom';
 import Form from 'react-bootstrap/Form';
@@ -6,29 +6,31 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import firebase from '../firebase';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setCurrentChatRoom } from './js/action/chatRoom_action';
 
-import { getDatabase, ref, set, remove, push, child } from "firebase/database";
-import { getStorage, ref as strRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import {
+    getDatabase,
+    ref,
+    set,
+    push,
+    remove,
+    child,
+} from "firebase/database";
+import {
+    getStorage,
+    ref as strRef,
+    uploadBytesResumable,
+    getDownloadURL,
+} from "firebase/storage";
 
 import './style.css';
 import Logo from './img/C&Clogo.png';
 
 const Chatroom = ({ message }) => {
-    const timeFromNow = timestamp => moment(timestamp).fromNow();
-
-    const isImage = message => {
-        return message.hasOwnProperty("image") && !message.hasOwnProperty("content");
-    }
-
-    const isMessageMine = (message, user) => {
-        if (user) {
-            return message.user.id === user.uid;
-        }
-    }
-
+    const dispatch = useDispatch();
     const chatRoom = useSelector(state => state.chatRoom.currentChatRoom);
-    const user = useSelector(state => state.user.currentUser);
+    const currentUser = useSelector(state => state.user.currentUser);
     const [content, setContent] = useState("");
     const [errors, setErrors] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -46,11 +48,11 @@ const Chatroom = ({ message }) => {
         const message = {
             timestamp: new Date(),
             user: {
-                id: user.uid,
-                name: user.displayName,
-                image: user.photoURL
-            }
-        }
+                id: currentUser ? currentUser.uid : null,
+                name: currentUser ? currentUser.displayName : null,
+                image: currentUser ? currentUser.photoURL : null,
+            },
+        };
 
         if (fileUrl !== null) {
             message["image"] = fileUrl;
@@ -59,34 +61,44 @@ const Chatroom = ({ message }) => {
         }
 
         return message;
-    }
+    };
+
+    useEffect(() => {
+        dispatch(setCurrentChatRoom({ id: 'chatRoomId', name: 'Chat Room Name' }));
+    }, [dispatch]);
 
     const handleSubmit = async () => {
         if (!content) {
-            setErrors(prev => prev.concat("Type contents first"));
+            setErrors((prev) => prev.concat("Type contents first"));
             return;
         }
         setLoading(true);
 
         try {
-            await set(push(child(messagesRef, chatRoom.id), createMessage()));
+            if (chatRoom && chatRoom.id) {
+                const newMessageRef = push(child(messagesRef, chatRoom.id));
+                await set(newMessageRef, createMessage());
 
-            await remove(child(typingRef, `${chatRoom.id}/${user.uid}`));
-            setLoading(false);
-            setContent("");
-            setErrors([]);
+                await remove(child(typingRef, `${chatRoom.id}/${currentUser.uid}`));
+                setLoading(false);
+                setContent("");
+                setErrors([]);
+            } else {
+                setLoading(false);
+                setErrors((prev) => prev.concat("Chat room is not selected."));
+            }
         } catch (error) {
-            setErrors(pre => pre.concat(error.message));
+            setErrors((prev) => prev.concat(error.message));
             setLoading(false);
             setTimeout(() => {
                 setErrors([]);
             }, 5000);
         }
-    }
+    };
 
     const handleOpenImageRef = () => {
         inputOpenImageRef.current.click();
-    }
+    };
 
     const getPath = () => {
         if (isPrivateChatRoom) {
@@ -94,7 +106,7 @@ const Chatroom = ({ message }) => {
         } else {
             return `/message/public`;
         }
-    }
+    };
 
     const handleUploadImage = (event) => {
         const file = event.target.files[0];
@@ -102,18 +114,16 @@ const Chatroom = ({ message }) => {
 
         const filePath = `${getPath()}/${file.name}`;
         console.log('filePath', filePath);
-        const metadata = { contentType: file.type }
-        setLoading(true)
+        const metadata = { contentType: file.type };
+        setLoading(true);
+
         try {
-            // https://firebase.google.com/docs/storage/web/upload-files#full_example
-            // Upload file and metadata to the object 'images/mountains.jpg'
             const storageRef = strRef(storage, filePath);
             const uploadTask = uploadBytesResumable(storageRef, file, metadata);
 
-            // Listen for state changes, errors, and completion of the upload.
-            uploadTask.on('state_changed',
+            uploadTask.on(
+                'state_changed',
                 (snapshot) => {
-                    // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                     console.log('Upload is ' + progress + '% done');
                     switch (snapshot.state) {
@@ -126,54 +136,57 @@ const Chatroom = ({ message }) => {
                     }
                 },
                 (error) => {
-                    // A full list of error codes is available at
-                    // https://firebase.google.com/docs/storage/web/handle-errors
                     switch (error.code) {
                         case 'storage/unauthorized':
-                            // User doesn't have permission to access the object
                             break;
                         case 'storage/canceled':
-                            // User canceled the upload
                             break;
-
-                        // ...
-
                         case 'storage/unknown':
-                            // Unknown error occurred, inspect error.serverResponse
                             break;
                     }
                 },
                 () => {
-                    // Upload completed successfully, now we can get the download URL
                     getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                        // console.log('File available at', downloadURL);
-                        set(push(child(messagesRef, chatRoom.id)), createMessage(downloadURL))
-                        setLoading(false)
+                        if (chatRoom && chatRoom.id) {
+                            const newMessageRef = push(child(messagesRef, chatRoom.id));
+                            set(newMessageRef, createMessage(downloadURL));
+                        }
+                        setLoading(false);
                     });
                 }
             );
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
-    }
+    };
 
     const handleKeyDown = (event) => {
-
         if (event.ctrlKey && event.keyCode === 13) {
             handleSubmit();
         }
 
-        const userUid = user.uid;
-        if (content) {
-            set(ref(getDatabase(), `typing/${chatRoom.id}/${user.uid}`), {
-                userUid: user.displayName
-            })
+        if (currentUser && currentUser.uid && content) {
+            set(ref(getDatabase(), `typing/${chatRoom.id}/${currentUser.uid}`), {
+                userUid: currentUser.uid,
+            });
         } else {
-            remove(ref(getDatabase(), `typing/${chatRoom.id}/${user.uid}`))
+            remove(ref(getDatabase(), `typing/${chatRoom.id}/${currentUser.uid}`));
         }
-    }
+    };
 
-    return(
+    const timeFromNow = (timestamp) => moment(timestamp).fromNow();
+
+    const isImage = (message) => {
+        return message.hasOwnProperty("image") && !message.hasOwnProperty("content");
+    };
+
+    const isMessageMine = (message, currentUser) => {
+        if (currentUser) {
+            return message.user.id === currentUser.uid;
+        }
+    };
+
+    return (
         <React.Fragment>
             <div className="CR-body">
                 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
@@ -183,7 +196,9 @@ const Chatroom = ({ message }) => {
                             <i className="fa fa-chevron-left fa-2x"></i>
                         </Link>
                     </span>
-                    <h1 className="header-title"></h1>
+                    <h1 className="header-title">
+                        {chatRoom ? chatRoom.name : 'Chat Room Name'}
+                    </h1>
                     <div className="header-icons">
                         <span>
                             <i className="fas fa-search fa-lg"></i>
@@ -194,38 +209,40 @@ const Chatroom = ({ message }) => {
                     </div>
                 </header>
                 <main className="chats">
-
-                    <div style={{ marginBottom: '3px', display:'flex' }}>
-                        <img
-                            style={{ borderRadius: '10px' }}
-                            width={48}
-                            height={48}
-                            className="mr-3"
-                            src={message.user.image}
-                            alt={message.user.name}
-                        />
-                        <div style={{
-                            backgroundColor: isMessageMine(message, user) && "#ECECEC"
-                        }}>
-                            <h6>{message.user.name}{" "}
-                                <span style={{ fontSize: '10px', color: 'gray' }}>
-                                    {timeFromNow(message.timestamp)}
-                                </span>
-                            </h6>
-                            {isImage(message) ?
-                                <img style={{ maxWidth: '300px' }} alt="이미지" src={message.image} />
-                                :
-                                <p>
-                                    {message.content}
-                                </p>
-                            }
-                        </div>
+                    <div className="chat-board">
+                        {message && currentUser && (
+                            <div style={{ marginBottom: '3px', display: 'flex' }}>
+                                <img
+                                    style={{ borderRadius: '50%' }}
+                                    width={48}
+                                    height={48}
+                                    className="mr-3"
+                                    src={message.user.image}
+                                    alt={message.user.name}
+                                />
+                                <div style={{
+                                    backgroundColor: isMessageMine(message, currentUser) && "#ECECEC"
+                                }}>
+                                    <h6>{message.user.name}{" "}
+                                        <span style={{ fontSize: '10px', color: 'gray' }}>
+                                            {timeFromNow(message.timestamp)}
+                                        </span>
+                                    </h6>
+                                    {isImage(message) ?
+                                        <img style={{ maxWidth: '300px' }} alt="이미지" src={message.image} />
+                                        :
+                                        <p>
+                                            {message.content}
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <ul className="chatlist-me">
                         <li className="chats_chat">
                             <div className="chats-content">
-                                <img src={Logo} className="img-me"/>
                                 <div className="chat-priview">
                                     <h3 className="chatuser-me">
                                         사자
@@ -243,7 +260,7 @@ const Chatroom = ({ message }) => {
                     <ul className="chatlist-you">
                         <li className="chats_chat">
                             <div className="chats-content">
-                                <img src={Logo} className="img-you"/>
+                                <img src={Logo} className="img-you" />
                                 <div className="chat-priview">
                                     <h3 className="chatuser-you">
                                         호랑이
@@ -319,7 +336,6 @@ const Chatroom = ({ message }) => {
                         ref={inputOpenImageRef}
                         onChange={handleUploadImage}
                     />
-
                 </nav>
 
                 <div id="no-mobile">

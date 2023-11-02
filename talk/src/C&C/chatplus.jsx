@@ -121,9 +121,9 @@ const ChatPlus = (props) => {
         if (count > 0) return count;
     };
 
-    const renderChatRooms = (Chatroom) =>
-        Chatroom.length > 0 &&
-        Chatroom.map((room) => (
+    const renderChatRooms = (chatRooms) =>
+        chatRooms.length > 0 &&
+        chatRooms.map((room) => (
             <li
                 key={room.id}
                 style={{
@@ -143,6 +143,7 @@ const ChatPlus = (props) => {
     useEffect(() => {
         setFirstChatRoom();
         addChatRoomsListeners();
+        handleShow();
     }, []);
 
     return (
@@ -170,33 +171,11 @@ const ChatPlus = (props) => {
                 </header>
                 <main className="new-chat">
                     <div>
-                        <div
-                            style={{
-                                position: "relative",
-                                width: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
-                            <FaRegSmileWink style={{ marginRight: 3 }} />
-                            CHAT ROOMS {" "} ({chatRooms.length})
-                            <FaPlus
-                            onClick={handleShow}
-                            style={{
-                                position: "absolute",
-                                right: 0,
-                                cursor: "pointer",
-                            }}
-                            />
-                        </div>
-                        <ul style={{ listStyleType: "none", padding: 0 }}>
-                            {renderChatRooms(chatRooms)}
-                        </ul>
-                        <Modal show={show} onHide={handleClose}>
+                        <div show={show} onHide={handleClose}>
                             <Modal.Body>
                                 <Form onSubmit={handleSubmit}>
                                     <Form.Group controlId="formBasicEmail">
-                                        <Form.Label>방 이름</Form.Label>
+                                        <div>방 이름</div>
                                         <Form.Control
                                             onChange={(e) => setName(e.target.value)}
                                             type="text"
@@ -204,7 +183,7 @@ const ChatPlus = (props) => {
                                         />
                                     </Form.Group>
                                     <Form.Group controlId="formBasicPassword">
-                                        <Form.Label>방 설명</Form.Label>
+                                        <div>방 설명</div>
                                         <Form.Control
                                             onChange={(e) => setDescription(e.target.value)}
                                             type="text"
@@ -221,7 +200,7 @@ const ChatPlus = (props) => {
                                     Create
                                 </Button>
                             </Modal.Footer>
-                        </Modal>
+                        </div>
                     </div>
                 </main>
                 <nav className="nav">

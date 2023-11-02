@@ -11,6 +11,22 @@
     flex-direction: column;
 }
 
+.chat-board{
+    margin-bottom: 3px;
+    display: flex;
+}
+
+.mr-3{
+    width: 3.25em;
+    height: 3.25em;
+    margin-right: 10px;
+    border-radius: 50%;
+}
+
+.upload-img{
+    max-width: 100px;
+}
+
 .chatlist-me, .chatlist-you{
     list-style: none;
 }
@@ -54,13 +70,6 @@
 .chats-content {
     display: flex;
     align-items: center;
-}
-
-.chats-content .img-me {
-    width: 3.25em;
-    height: 3.25em;
-    margin-right: 10px;
-    border-radius: 50%;
 }
 
 .chats-content .img-you {

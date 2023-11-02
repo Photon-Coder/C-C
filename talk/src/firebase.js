@@ -10,8 +10,8 @@ const firebaseConfig = {
     projectId: "react-firebase-chat-app-643b1",
     storageBucket: "react-firebase-chat-app-643b1.appspot.com",
     messagingSenderId: "705677831171",
-    appId: "1:705677831171:web:eaa3d3bfd65209e830f236",
-    measurementId: "G-FCMV9FKFMM"
+    appId: "1:705677831171:web:a79a3eefc566c3f130f236",
+    measurementId: "G-Y1H6WEJJRS"
 };
 
 const app = initializeApp(firebaseConfig);
