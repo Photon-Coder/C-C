@@ -1,11 +1,15 @@
-import React, { useRef } from 'react'
+import React, { useRef, useEffect, useState } from 'react';
 import { IoIosChatboxes } from 'react-icons/io';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Image from 'react-bootstrap/Image';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+    setCurrentChatRoom,
+    setPrivateChatRoom
+} from './js/action/chatRoom_action';
 import { setPhotoURL } from './js/action/user_action';
-import { getDatabase, ref, child, update } from "firebase/database";
+import { getDatabase, ref, update, onChildAdded } from "firebase/database";
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 import { getStorage, ref as strRef, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 
@@ -13,10 +17,52 @@ import './style.css';
 import Logo from './img/C&Clogo.png';
 
 const People = () => {
-
-    const user = useSelector(state => state.user.currentUser)
+    const user = useSelector(state => state.user.currentUser);
     const dispatch = useDispatch();
     const inputOpenImageRef = useRef();
+    const [users, setUsers] = useState([]);
+    const [activeChatRoom, setActiveChatRoom] = useState("");
+
+    useEffect(() => {
+        if (user) {
+            addUsersListeners(user.uid);
+        }
+    }, [user]);
+
+    const addUsersListeners = (currentUserId) => {
+        const usersRef = ref(getDatabase(), "users");
+        let usersArray = [];
+
+        onChildAdded(usersRef, (DataSnapshot) => {
+            if (currentUserId !== DataSnapshot.key) {
+                let user = DataSnapshot.val();
+                user["uid"] = DataSnapshot.key;
+                user["status"] = "offline";
+                usersArray.push(user);
+                setUsers(usersArray);
+            }
+        });
+    }
+
+    const getChatRoomId = (userId) => {
+        const currentUserId = user.uid;
+
+        return userId > currentUserId
+            ? `${userId}/${currentUserId}`
+            : `${currentUserId}/${userId}`;
+    }
+
+    const changeChatRoom = (user) => {
+        const chatRoomId = getChatRoomId(user.uid);
+        const chatRoomData = {
+            id: chatRoomId,
+            name: user.name
+        };
+
+        dispatch(setCurrentChatRoom(chatRoomData));
+        dispatch(setPrivateChatRoom(true));
+        setActiveChatRoom(user.uid);
+    }
 
     const handleLogout = () => {
         const auth = getAuth();
@@ -38,62 +84,42 @@ const People = () => {
 
         const metadata = { contentType: file.type };
         const storage = getStorage();
-        // https://firebase.google.com/docs/storage/web/upload-files#full_example
+
         try {
-            //스토리지에 파일 저장하기 
-            let uploadTask = uploadBytesResumable(strRef(storage, `user_image/${user.uid}`), file, metadata)
+            // 스토리지에 파일 저장하기
+            let uploadTask = uploadBytesResumable(strRef(storage, `user_image/${user.uid}`), file, metadata);
 
-
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    console.log('Upload is ' + progress + '% done');
-                    switch (snapshot.state) {
-                        case 'paused':
-                            console.log('Upload is paused');
-                            break;
-                        case 'running':
-                            console.log('Upload is running');
-                            break;
-                    }
-                },
-                (error) => {
-                    // A full list of error codes is available at
-                    // https://firebase.google.com/docs/storage/web/handle-errors
-                    switch (error.code) {
-                        case 'storage/unauthorized':
-                            // User doesn't have permission to access the object
-                            break;
-                        case 'storage/canceled':
-                            // User canceled the upload
-                            break;
-
-                        // ...
-
-                        case 'storage/unknown':
-                            // Unknown error occurred, inspect error.serverResponse
-                            break;
-                    }
-                },
-                () => {
-                    // Upload completed successfully, now we can get the download URL
-                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                        // 프로필 이미지 수정
-                        updateProfile(user, {
-                            photoURL: downloadURL
-                        })
-
-                        dispatch(setPhotoURL(downloadURL))
-
-                        //데이터베이스 유저 이미지 수정
-                        update(ref(getDatabase(), `users/${user.uid}`), { image: downloadURL })
-                    });
+            uploadTask.on('state_changed', (snapshot) => {
+                // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                console.log('Upload is ' + progress + '% done');
+                switch (snapshot.state) {
+                    case 'paused':
+                        console.log('Upload is paused');
+                        break;
+                    case 'running':
+                        console.log('Upload is running');
+                        break;
                 }
-            );
-            // console.log('uploadTaskSnapshot', uploadTaskSnapshot)
+            }, (error) => {
+                // Handle errors during upload
+                console.error(error);
+            }, () => {
+                // Handle successful upload
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    // Update the user's profile image
+                    updateProfile(user, {
+                        photoURL: downloadURL
+                    });
+
+                    dispatch(setPhotoURL(downloadURL));
+
+                    // Update the user's image in the database
+                    update(ref(getDatabase(), `users/${user.uid}`), { image: downloadURL });
+                });
+            });
         } catch (error) {
-            console.log(error)
+            console.error(error);
         }
     }
 
@@ -119,9 +145,7 @@ const People = () => {
                 <main className="people">
                     <a href="##">
                         <div className="me">
-                            <Image src={user && user.photoURL}
-                                className="M-img"
-                                roundedCircle />
+                            <Image src={user && user.photoURL} className="M-img" roundedCircle />
                             <div className="me-column">
                                 <div id="my-data">
                                     {user && user.displayName}
@@ -143,22 +167,24 @@ const People = () => {
                                 <div className="friends-column">
                                     <h4 className="friends-name">교육 봇</h4>
                                     <span className="friends-textline">
-                                        <div className="textline_for">**회사 교육 도우미입니다! 많은 질문부탁 드려요!</div>
+                                        <div className="textline_for">**회사 교육 도우미입니다! 많은 질문 부탁 드려요!</div>
                                     </span>
                                 </div>
                             </div>
                         </a>
-                        <a href="##">
-                            <div className="friends">
-                                <img src={Logo} alt="friend img" className="F-img" />
-                                <div className="friends-column">
-                                    <h4 className="friends-name">사자</h4>
-                                    <span className="friends-textline">
-                                        <div className="textline_for">언제나 신나게</div>
-                                    </span>
+                        {users.length > 0 && users.map(user => (
+                            <a href="##">
+                                <div className="friends">
+                                    <img src={Logo} alt="friend img" className="F-img" />
+                                    <div className="friends-column">
+                                        <h4 className="friends-name">{user.name}</h4>
+                                        <span className="friends-textline">
+                                            <div className="textline_for">언제나 신나게</div>
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        </a>
+                            </a>
+                        ))}
                     </div>
                 </main>
                 <nav className="nav">

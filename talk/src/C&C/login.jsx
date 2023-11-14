@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
@@ -8,27 +7,28 @@ import './style.css';
 import Logo from './img/C&Clogo.png';
 
 function Login() {
-    const auth = getAuth();
 
+    const auth = getAuth();
+    
     const { register, handleSubmit, formState: { errors } } = useForm();
-    const [errorFromSubmit, setErrorFromSubmit] = useState("")
+    const [errorFromSubmit, setErrorFromSubmit] = useState("");
     const [loading, setLoading] = useState(false);
 
     const onSubmit = async (data) => {
         try {
-            setLoading(true)
+            setLoading(true);
 
             await signInWithEmailAndPassword(auth, data.email, data.password);
 
-            setLoading(false)
+            setLoading(false);
         } catch (error) {
-            setErrorFromSubmit(error.message)
-            setLoading(false)
+            setErrorFromSubmit(error.message);
+            setLoading(false);
             setTimeout(() => {
-                setErrorFromSubmit("")
+                setErrorFromSubmit("");
             }, 5000);
         }
-    }
+    };
 
     return (
         <React.Fragment>

@@ -193,11 +193,15 @@ const ChatPlus = (props) => {
                                 </Form>
                             </Modal.Body>
                             <Modal.Footer>
-                                <Button variant="secondary" onClick={handleClose}>
-                                    Close
-                                </Button>
+                                <Link to="/Chat">
+                                    <Button variant="secondary" onClick={handleClose}>
+                                        Close
+                                    </Button>
+                                </Link>
                                 <Button variant="primary" onClick={handleSubmit}>
-                                    Create
+                                    <Link to="/Chatroom/${room.id}">                                    
+                                        Create
+                                    </Link>
                                 </Button>
                             </Modal.Footer>
                         </div>

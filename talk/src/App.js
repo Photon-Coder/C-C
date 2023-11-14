@@ -1,9 +1,6 @@
 import React, { useEffect } from "react";
 import { Routes, Route, useNavigate } from 'react-router-dom';
 
-import logo from './logo.svg';
-import './App.css';
-
 import Login from './C&C/login';
 import Registration from './C&C/registration';
 import People from './C&C/people';
@@ -14,7 +11,6 @@ import Set from './C&C/set';
 import More from './C&C/more';
 
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-
 import { useDispatch, useSelector } from "react-redux";
 import { setUser, clearUser } from "./C&C/js/action/user_action";
 
@@ -41,6 +37,8 @@ function App(props) {
         // ...
       }
     });
+
+    // Cleanup function to unsubscribe when the component unmounts
   }, []);
 
   if (isLoading) {
@@ -53,7 +51,7 @@ function App(props) {
         <Route path="/" element={<People />} />
         <Route path="/Chat" element={<Chat />} />
         <Route path="/Chatplus" element={<Chatplus />} />
-        <Route path="/Chatroom" element={<Chatroom />} />
+        <Route path="/Chatroom/:roomId" element={<Chatroom />} />
         <Route path="/Set" element={<Set />} />
         <Route path="/More" element={<More />} />
       </Routes>

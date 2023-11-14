@@ -13,23 +13,35 @@
     bottom: 0;
     width: 100%;
     background-color: #27374D;
-    padding: 20px 50px;
+    padding: 20px 7%;
     box-sizing: border-box;
     border-top: 1px solid rgba(121, 121, 121, 0.3);
 }
 
 .CR-nav .sendbtn {
+    padding: 1% 2% 1%;
     margin-top: 8%;
     display: inline;
-    width: 20%;
-    float: left
+    width: 15%;
+    float: left;
 }
+
+.send{
+    border-radius: 20%;
+}
+
 .CR-nav .uploadbtn {
-    margin-top: 8%;
     width: 20%;
+    font-size: 18px;
+    padding: 3% 2%;
+    margin-top: 5%;
     float: left;
     display: flex;
     justify-content: center;
+}
+
+.upload{
+    border-radius: 20%;
 }
 
 .CR-nav .formchat {
@@ -157,17 +169,4 @@
     width: 100%;
     height: 20px;
     padding: 0.5% 1%;
-}
-
-.sendbtn{
-    background: #fff;
-    border-radius: 0.9375em;
-    float: right;
-    width: 13%;
-    padding: 0.5% 1%;
-}
-
-.sendbtn:hover {
-    background: #526D82;
-    box-shadow: inset 1px 1px 1px #DDE6ED;
 }

@@ -4,10 +4,10 @@ import {
     SET_USER_POSTS
 } from './types';
 
-export function setCurrentChatRoom(currentChatRoom) {
+export const setCurrentChatRoom = (chatRoom) => {
     return {
         type: SET_CURRENT_CHAT_ROOM,
-        payload: currentChatRoom
+        payload: chatRoom,
     }
 }
 

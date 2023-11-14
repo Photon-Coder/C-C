@@ -175,15 +175,29 @@ const Chat = (props) => {
                 <main className="chat">
                     <ul style={{ listStyleType: "none", padding: 0 }}>
                         {chatRooms.map((room) => (
-                            // 각 채팅 방 항목
                                 <li
                                     key={room.id}
                                     style={{
                                         backgroundColor: room.id === activeChatRoomId && "#ffffff45",
                                     }}
                                 >
-                                <Link to="/Chatroom">
-                                    # {room.name}
+                                <Link to={`/Chatroom/${room.id}`}>
+                                    <div className="chat__section-row">
+                                        <img src={Logo} alt="Profile" />
+                                        <div className="chat__section-column">
+                                            <h4 className="chat__section-name">{room.name}</h4>
+                                            <span className="chat__section-textline">
+                                                <div className="chat__textline_for">
+                                                    {room.description}
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div className="new_chat">
+                                            <h6 className="time">23:22</h6>
+                                            <div className="badge">1</div>
+                                        </div>
+                                    </div>
+                                    
                                     <Badge style={{ float: "right", marginTop: "4px" }} variant="danger">
                                         {getNotificationCount(room)}
                                     </Badge>
@@ -191,57 +205,7 @@ const Chat = (props) => {
                             </li>
                         ))}
                     </ul>
-                    <Link to="/Chatroom">
-                        <div className="chat__section-row">
-                            <img src={Logo} alt="Profile" />
-                            <div className="chat__section-column">
-                                <h4 className="chat__section-name">교육 봇</h4>
-                                <span className="chat__section-textline">
-                                    <div className="chat__textline_for">
-                                        요청 하신 자료는 현재 2건 있습니다....
-                                    </div>
-                                </span>
-                            </div>
-                            <div className="new_chat">
-                                <h6 className="time">23:22</h6>
-                                <div className="badge">1</div>
-                            </div>
-                        </div>
-                    </Link>
-                    <a href="#">
-                        <div className="chat__section-row">
-                            <img src={Logo} alt="Profile" />
-                            <div className="chat__section-column">
-                                <h4 className="chat__section-name">##</h4>
-                                <span className="chat__section-textline">
-                                    <div className="chat__textline_for">
-                                        ##
-                                    </div>
-                                </span>
-                            </div>
-                            <div className="new_chat">
-                                <h6 className="time">21:22</h6>
-                                <div className="badge">1</div>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="#">
-                        <div className="chat__section-row">
-                            <img src={Logo} alt="Profile" />
-                            <div className="chat__section-column">
-                                <h4 className="chat__section-name">**</h4>
-                                <span className="chat__section-textline">
-                                    <div className="chat__textline_for">
-                                        **
-                                    </div>
-                                </span>
-                            </div>
-                            <div className="new_chat">
-                                <h6 className="time">12:04</h6>
-                                <div className="badge">1</div>
-                            </div>
-                        </div>
-                    </a>
+                
                     <Link to="/Chatplus">
                         <div className="chat-plus">
                             <FaPlus className="plus-btn" onClick={handleShow} />
