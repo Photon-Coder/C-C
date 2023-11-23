@@ -145,7 +145,6 @@ const More = () => {
                         </li>
                         <li className="tab-bar__btn">
                             <Link to="/Chat" className="nav-tab">
-                                <span className="nav-notification badge">3</span>
                                 <i className="fas fa-comment fa-2x"></i>
                             </Link>
                         </li>

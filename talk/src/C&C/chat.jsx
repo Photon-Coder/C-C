@@ -194,7 +194,6 @@ const Chat = (props) => {
                                         </div>
                                         <div className="new_chat">
                                             <h6 className="time">23:22</h6>
-                                            <div className="badge">1</div>
                                         </div>
                                     </div>
                                     
@@ -221,7 +220,6 @@ const Chat = (props) => {
                         </li>
                         <li className="tab-bar__btn">
                             <Link to="/Chat" className="nav-tab--selected">
-                                <span className="nav-notification badge">3</span>
                                 <i className="fas fa-comment fa-2x"></i>
                             </Link>
                         </li>

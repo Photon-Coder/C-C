@@ -92,12 +92,19 @@ const ChatPlus = (props) => {
                 image: props.user.photoURL,
             },
         };
-
+    
         try {
             await update(child(chatRoomsRef, key), newChatRoom);
             setName("");
             setDescription("");
             setShow(false);
+            
+            props.dispatch(setCurrentChatRoom(newChatRoom));
+            // Chatroom 페이지로 이동 시에 채팅방 이름을 전달
+            props.history.push({
+                pathname: `/Chatroom/${newChatRoom.id}`,
+                state: { chatRoomName: newChatRoom.name }
+            });
         } catch (error) {
             alert(error);
         }
@@ -193,13 +200,13 @@ const ChatPlus = (props) => {
                                 </Form>
                             </Modal.Body>
                             <Modal.Footer>
-                                <Link to="/Chat">
-                                    <Button variant="secondary" onClick={handleClose}>
+                                <Button variant="secondary" onClick={handleClose}>
+                                    <Link to="/Chat" className='close'>
                                         Close
-                                    </Button>
-                                </Link>
+                                    </Link>
+                                </Button>
                                 <Button variant="primary" onClick={handleSubmit}>
-                                    <Link to="/Chatroom/${room.id}">                                    
+                                    <Link to="/Chatroom/${room.id}" className='create'>                                    
                                         Create
                                     </Link>
                                 </Button>

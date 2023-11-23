@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import moment from 'moment';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Form from 'react-bootstrap/Form';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import Badge from 'react-bootstrap/Badge';
 import firebase from '../firebase';
 import { useSelector, useDispatch } from 'react-redux';
-import { setCurrentChatRoom } from './js/action/chatRoom_action';
+import { setCurrentChatRoom, setPrivateChatRoom } from './js/action/chatRoom_action';
 
 import {
     getDatabase,
@@ -30,6 +31,7 @@ import Logo from './img/C&Clogo.png';
 const Chatroom = ({ message }) => {
     const dispatch = useDispatch();
     const chatRoom = useSelector(state => state.chatRoom.currentChatRoom);
+    const [chatRoomName, setChatRoomName] = useState('');
     const currentUser = useSelector(state => state.user.currentUser);
     const [content, setContent] = useState("");
     const [errors, setErrors] = useState([]);
@@ -39,12 +41,18 @@ const Chatroom = ({ message }) => {
     const inputOpenImageRef = useRef();
     const typingRef = ref(getDatabase(), "typing");
     const isPrivateChatRoom = useSelector(state => state.chatRoom.isPrivateChatRoom);
+    const [activeChatRoomId, setActiveChatRoomId] = useState("");
+    const [notifications, setNotifications] = useState([]);
+    const [chatRoomInfo, setChatRoomInfo] = useState(null);
+    const [show, setShow] = useState(false);
+    const location = useLocation();
+    const newMessageRef = chatRoom ? push(child(messagesRef, chatRoom.id)) : null;
 
     const handleChange = (event) => {
         setContent(event.target.value);
     }
 
-    const createMessage = (fileUrl = null) => {
+    const createMessage = async (fileUrl = null) => {
         const message = {
             timestamp: new Date(),
             user: {
@@ -63,6 +71,48 @@ const Chatroom = ({ message }) => {
         return message;
     };
 
+    const getNotificationCount = (room) => {
+        let count = 0;
+        notifications.forEach((notification) => {
+            if (notification.id === room.id) {
+                count = notification.count;
+            }
+        });
+        return count;
+    };
+
+    const changeChatRoom = (room) => {
+        dispatch(setCurrentChatRoom(room));
+        dispatch(setPrivateChatRoom(false));
+        setActiveChatRoomId(room.id);
+    };
+
+    useEffect(() => {
+        // 페이지가 처음 로드될 때 채팅방 이름을 가져와 state에 설정
+        if (location.state && location.state.chatRoomName) {
+            console.log('Setting chatRoomName from location state:', location.state.chatRoomName);
+            setChatRoomName(location.state.chatRoomName);
+        }
+    }, [location]);
+
+    const renderChatRooms = (Chatroom) =>
+        Chatroom.length > 0 &&
+        Chatroom.map((room) => (
+            <li
+                key={room.id}
+                style={{
+                    backgroundColor:
+                        room.id === activeChatRoomId && "#ffffff45",
+                }}
+                onClick={() => changeChatRoom(room)}
+            >
+                # {room.name}
+                <Badge style={{ float: "right", marginTop: "4px" }} variant="danger">
+                    {getNotificationCount(room)}
+                </Badge>
+            </li>
+        ));
+
     useEffect(() => {
         dispatch(setCurrentChatRoom({ id: 'chatRoomId', name: 'Chat Room Name' }));
     }, [dispatch]);
@@ -77,7 +127,7 @@ const Chatroom = ({ message }) => {
         try {
             if (chatRoom && chatRoom.id) {
                 const newMessageRef = push(child(messagesRef, chatRoom.id));
-                await set(newMessageRef, createMessage());
+                await set(newMessageRef, await createMessage());
 
                 await remove(child(typingRef, `${chatRoom.id}/${currentUser.uid}`));
                 setLoading(false);
@@ -126,37 +176,28 @@ const Chatroom = ({ message }) => {
                 (snapshot) => {
                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                     console.log('Upload is ' + progress + '% done');
-                    switch (snapshot.state) {
-                        case 'paused':
-                            console.log('Upload is paused');
-                            break;
-                        case 'running':
-                            console.log('Upload is running');
-                            break;
-                    }
+                    setPercentage(progress);
                 },
                 (error) => {
-                    switch (error.code) {
-                        case 'storage/unauthorized':
-                            break;
-                        case 'storage/canceled':
-                            break;
-                        case 'storage/unknown':
-                            break;
-                    }
+                    setErrors([error.message]);
                 },
-                () => {
-                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                async () => {
+                    try {
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                         if (chatRoom && chatRoom.id) {
                             const newMessageRef = push(child(messagesRef, chatRoom.id));
                             set(newMessageRef, createMessage(downloadURL));
                         }
                         setLoading(false);
-                    });
+                        setPercentage(0);
+                    } catch (error) {
+                        setErrors([error.message]);
+                        setLoading(false);
+                    }
                 }
             );
         } catch (error) {
-            console.log(error);
+            setErrors([error.message]);
         }
     };
 
@@ -165,25 +206,34 @@ const Chatroom = ({ message }) => {
             handleSubmit();
         }
 
-        if (currentUser && currentUser.uid && content) {
+        if (currentUser && currentUser.uid && content && chatRoom && chatRoom.id) {
             set(ref(getDatabase(), `typing/${chatRoom.id}/${currentUser.uid}`), {
                 userUid: currentUser.uid,
             });
         } else {
-            remove(ref(getDatabase(), `typing/${chatRoom.id}/${currentUser.uid}`));
+            // Handle the case where chatRoom is not defined
+            console.error('Chat room is not selected.');
         }
     };
+
+    const handleShow = () => {
+        setShow(true);
+        // 채팅방 이름 설정 코드 추가
+        if (location && location.state) {
+            setChatRoomName(location.state.chatRoomName || '');
+        }
+    };
+
+    const handleClose = () => setShow(false);
 
     const timeFromNow = (timestamp) => moment(timestamp).fromNow();
 
     const isImage = (message) => {
-        return message.hasOwnProperty("image") && !message.hasOwnProperty("content");
+        return message?.hasOwnProperty("image") && !message?.hasOwnProperty("content");
     };
 
     const isMessageMine = (message, currentUser) => {
-        if (currentUser) {
-            return message.user.id === currentUser.uid;
-        }
+        return currentUser && message?.user?.id === currentUser.uid;
     };
 
     return (
@@ -197,7 +247,7 @@ const Chatroom = ({ message }) => {
                         </Link>
                     </span>
                     <h1 className="header-title">
-                        {chatRoom ? chatRoom.name : 'Chat Room Name'}
+                        {chatRoom?.name || chatRoomName}
                     </h1>
                     <div className="header-icons">
                         <span>
@@ -210,33 +260,54 @@ const Chatroom = ({ message }) => {
                 </header>
                 <main className="chats">
                     <div className="chat-board">
-                        {message && currentUser && (
-                            <div style={{ marginBottom: '3px', display: 'flex' }}>
-                                <img
-                                    style={{ borderRadius: '50%' }}
-                                    width={48}
-                                    height={48}
-                                    className="mr-3"
-                                    src={message.user.image}
-                                    alt={message.user.name}
-                                />
-                                <div style={{
-                                    backgroundColor: isMessageMine(message, currentUser) && "#ECECEC"
-                                }}>
-                                    <h6>{message.user.name}{" "}
-                                        <span style={{ fontSize: '10px', color: 'gray' }}>
-                                            {timeFromNow(message.timestamp)}
-                                        </span>
-                                    </h6>
-                                    {isImage(message) ?
-                                        <img style={{ maxWidth: '300px' }} alt="이미지" src={message.image} />
-                                        :
-                                        <p>
-                                            {message.content}
-                                        </p>
-                                    }
-                                </div>
-                            </div>
+                        {message && currentUser && message.user && (
+                            <ul className={isMessageMine(message, currentUser) ? "chatlist-me" : "chatlist-you"}>
+                                <li className="chats_chat">
+                                    <div className="chats-content">
+                                        <div className="chat-priview">
+                                            <h3 className={isMessageMine(message, currentUser) ? "chatuser-me" : "chatuser-you"}>
+                                                {message.user.name}
+                                            </h3>
+                                            <span className={isMessageMine(message, currentUser) ? "chat-last-message-me" : "chat-last-message-you"}>
+                                                {isImage(message) ? "이미지" : message.content}
+                                            </span>
+                                        </div>
+                                        {isMessageMine(message, currentUser) && (
+                                            <img
+                                                src={message.user.image}
+                                                className={isMessageMine(message, currentUser) ? "img-me" : "img-you"}
+                                                alt={message.user.name}
+                                            />
+                                        )}
+                                    </div>
+                                    <span className={isMessageMine(message, currentUser) ? "chat-date-time-me" : "chat-date-time-you"}>
+                                        {timeFromNow(message.timestamp)}
+                                    </span>
+                                </li>
+                            </ul>
+                        )}
+
+                        {chatRoomInfo && (
+                            <ul className={isMessageMine(message, currentUser) ? "chatlist-me" : "chatlist-you"}>
+                                <li className="chats_chat">
+                                    <div className="chats-content">
+                                        {/* 사용자에 따라 이미지를 변경 */}
+                                        <img src={isMessageMine(message, currentUser) ? currentUser.photoURL : message.user.image} className={isMessageMine(message, currentUser) ? "img-me" : "img-you"} />
+                                        <div className="chat-priview">
+                                            {/* 사용자에 따라 클래스를 변경하여 스타일 적용 */}
+                                            <h3 className={isMessageMine(message, currentUser) ? "chatuser-me" : "chatuser-you"}>
+                                                {isMessageMine(message, currentUser) ? currentUser.displayName : message.user.name}
+                                            </h3>
+                                            <span className={isMessageMine(message, currentUser) ? "chat-last-message-me" : "chat-last-message-you"}>
+                                                {content}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <span className={isMessageMine(message, currentUser) ? "chat-date-time-me" : "chat-date-time-you"}>
+                                        {moment().fromNow()}
+                                    </span>
+                                </li>
+                            </ul>
                         )}
                     </div>
 
